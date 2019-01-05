@@ -3,12 +3,12 @@ import 'firebase/auth';
 import 'firebase/database';
 
 var config = {
-    apiKey: "AIzaSyCNxmWwOl08ZOJccx179FG4de2Ubql527M",
-    authDomain: "midasbrewpie.firebaseapp.com",
-    databaseURL: "https://midasbrewpie.firebaseio.com",
-    projectId: "midasbrewpie",
-    storageBucket: "midasbrewpie.appspot.com",
-    messagingSenderId: "687577017760"
+    apiKey: process.env.REACT_APP_API_KEY,
+    authDomain: process.env.REACT_APP_AUTH_DOMAIN,
+    databaseURL: process.env.REACT_APP_DATABASE_URL,
+    projectId: process.env.REACT_APP_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
 };
 
 class Firebase {
@@ -28,10 +28,10 @@ class Firebase {
     doPasswordUpdate = password =>
       this.auth.currentUser.updatePassword(password);    
 
-  // *** DB API ***
-  user = uid => this.db.ref(`users/${uid}`);
-  users = () => this.db.ref('users');      
-  fermentations = () => this.db.ref('fermentations');      
+    // *** DB API ***
+    user = uid => this.db.ref(`users/${uid}`);
+    users = () => this.db.ref('users');      
+    fermentations = () => this.db.ref('fermentations');      
 }
   
 export default Firebase;

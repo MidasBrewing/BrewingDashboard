@@ -16,17 +16,17 @@ class Fermentation extends Component {
         this.setState({ loading: true });
 
         this.props.firebase.fermentations().on('value', snapshot => {
-        const usersObject = snapshot.val();
+            const usersObject = snapshot.val();
 
-        const usersList = Object.keys(usersObject).map(key => ({
-            ...usersObject[key],
-            uid: key,
-        }));
+            const usersList = Object.keys(usersObject).map(key => ({
+                ...usersObject[key],
+                uid: key,
+            }));
 
-        this.setState({
-            entries: usersList,
-            loading: false,
-        });
+            this.setState({
+                entries: usersList,
+                loading: false,
+            });
         });
     }
 

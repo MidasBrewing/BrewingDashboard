@@ -66,3 +66,9 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/de
 ### `npm run build` fails to minify
 
 This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+
+## Firebase
+
+Add a .env corresponding to https://console.firebase.google.com/u/0/project/midasbrewpie/settings/general/ "Add Firebase to your web app" (see firebase.js#config for properties)
+
+### `firebase deploy` deploy to firebase after react app deploy

@@ -1,4 +1,4 @@
-import React, { Component, Button } from 'react';
+import React, { Component } from 'react';
 
 import { withFirebase } from '../Firebase';
 
@@ -7,35 +7,48 @@ class Fermentation extends Component {
         super(props);
 
         this.state = {
-        loading: false,
-        entries: [],
+            loading: false,
+            fermentations: [],
         };
+
+        this.doResetFermentationEntires = this.doResetFermentationEntires.bind(this);
+        this.loadFermentations = this.loadFermentations.bind(this);
     }
 
-    componentDidMount() {
+    loadFermentations() {
         this.setState({ loading: true });
 
         this.props.firebase.fermentations().on('value', snapshot => {
-            const usersObject = snapshot.val();
-
-            const usersList = Object.keys(usersObject).map(key => ({
-                ...usersObject[key],
-                uid: key,
-            }));
+            const fermentations = snapshot.val();
 
             this.setState({
-                entries: usersList,
+                fermentations: fermentations || [],
                 loading: false,
             });
         });
     }
 
+    componentDidMount() {
+        this.loadFermentations();
+    }
+
     render() {
-        const { entries, loading } = this.state;
-        const { firebase } = this.props;
-        const pings = 1;
-        const lastPing = '' + new Date();
-        const countLastHour = 5;
+        const { fermentations, loading } = this.state;
+        const pings = fermentations.length;
+        const lastFermentation = fermentations[fermentations.length - 1];
+        const lastPing = lastFermentation ? lastFermentation.to : "-";
+        const now = new Date();
+        const countLastHour = fermentations.reduce((accumulator, currentValue) => {
+            const currentDate = new Date(currentValue.from);
+
+            if (now.getFullYear() === currentDate.getFullYear() && 
+                now.getMonth() === currentDate.getMonth() &&
+                now.getDay() === currentDate.getDay() &&
+                now.getHours() === currentDate.getHours()) {
+                return accumulator + currentValue.count;        
+            }
+            return accumulator;
+        }, 0);
 
         return (
             <div>
@@ -46,7 +59,7 @@ class Fermentation extends Component {
                 <div>Bubbles the last hour: {countLastHour}</div>
                 <div>Pings from MidasPie: {pings}</div>
                 <div>Last ping at: {lastPing}</div>
-                <button type="button" onClick={() => this.doResetFermentationEntires }>
+                <button type="button" onClick={ this.doResetFermentationEntires }>
                     Reset
                 </button>      
             </div>
@@ -54,7 +67,10 @@ class Fermentation extends Component {
     }
 
     doResetFermentationEntires() {
-        
+        this.props.firebase.fermentations().set({}); 
+        this.setState({
+            fermentations: [],
+        });
     }
 }
 

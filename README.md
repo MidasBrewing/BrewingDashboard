@@ -71,4 +71,6 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 
 Add a .env corresponding to https://console.firebase.google.com/u/0/project/midasbrewpie/settings/general/ "Add Firebase to your web app" (see firebase.js#config for properties)
 
-### `firebase deploy` deploy to firebase after react app deploy
+### `firebase deploy`
+
+Deploys the app built in `./build` to firebase. You will need to install firebase-tools `npm install -g firebase-tools` and login using a google account `firebase login`. Instyall fo firebase-tools and login is required once.

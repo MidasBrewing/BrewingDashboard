@@ -59,7 +59,7 @@ class Navigation extends React.Component {
         const NavigationAuth = () => (
             <div>
                 <MenuItemLink to={ROUTES.LANDING} text="Landing" />
-                <MenuItemLink to={ROUTES.HOME} text="Home" />
+                <MenuItemLink to={ROUTES.DASHBOARD} text="Dashboard" />
                 <MenuItemLink to={ROUTES.ACCOUNT} text="Account" />
                 <MenuItemLink to={ROUTES.ADMIN} text="Admin" />
             </div>

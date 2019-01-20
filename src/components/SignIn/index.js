@@ -1,15 +1,36 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { compose } from 'recompose';
+import classNames from 'classnames';
+import { withStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import IconButton from '@material-ui/core/IconButton';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import Button from '@material-ui/core/Button';
 
 import { SignUpLink } from '../SignUp';
 import { PasswordForgetLink } from '../PasswordForget';
 import { withFirebase } from '../Firebase';
 import * as ROUTES from '../../constants/routes';
 
+const styles = theme => ({
+    root: {
+      display: 'flex',
+      flexWrap: 'wrap',
+    },
+    margin: {
+      margin: theme.spacing.unit,
+    },
+    textField: {
+      flexBasis: 200,
+    },
+});
+
 const SignInPage = () => (
     <div>
-        <h1>SignIn</h1>
+        <h1>Sign In</h1>
         <SignInForm />
         <PasswordForgetLink />
         <SignUpLink />
@@ -20,6 +41,7 @@ const INITIAL_STATE = {
     email: '',
     password: '',
     error: null,
+    showPassword: false,
 };
 
 class SignInFormBase extends Component {
@@ -48,30 +70,55 @@ class SignInFormBase extends Component {
         this.setState({ [event.target.name]: event.target.value });
     };
 
+    handleClickShowPassword = () => {
+        this.setState(state => ({ showPassword: !state.showPassword }));
+    };
+
     render() {
-        const { email, password, error } = this.state;
+        const { email, password, error, showPassword } = this.state;
+        const { classes } = this.props;
 
         const isInvalid = password === '' || email === '';
 
         return (
             <form onSubmit={this.onSubmit}>
-                <input
+
+                <TextField
+                    id="outlined-simple-start-adornment"
+                    className={classNames(classes.margin, classes.textField)}
+                    variant="outlined"
+                    label="E-mail"
                     name="email"
                     value={email}
                     onChange={this.onChange}
-                    type="text"
-                    placeholder="Email Address"
                 />
-                <input
+
+                <TextField
+                    id="outlined-adornment-password"
+                    className={classNames(classes.margin, classes.textField)}
+                    variant="outlined"
+                    type={showPassword ? 'text' : 'password'}
+                    label="Password"
                     name="password"
                     value={password}
                     onChange={this.onChange}
-                    type="password"
-                    placeholder="Password"
+                    InputProps={{
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    aria-label="Toggle password visibility"
+                                    onClick={this.handleClickShowPassword}
+                                >
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        ),
+                    }}
                 />
-                <button disabled={isInvalid} type="submit">
+
+                <Button variant="contained" color="primary" className={classNames(classes.margin, classes.button)} disabled={isInvalid} type="submit">
                     Sign In
-                </button>
+                </Button>
 
                 {error && <p>{error.message}</p>}
             </form>
@@ -79,11 +126,11 @@ class SignInFormBase extends Component {
     }
 }
 
-const SignInForm = compose(
+const SignInForm = withStyles(styles)(compose(
     withRouter,
     withFirebase,
-)(SignInFormBase);
+)(SignInFormBase));
 
 export default SignInPage;
 
-export { SignInForm };
+//export { SignInForm };

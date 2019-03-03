@@ -22,7 +22,7 @@ class Fermentation extends Component {
             const fermentations = snapshot.val();
 
             this.setState({
-                fermentations: fermentations || [],
+                fermentations: (fermentations ? Object.values(fermentations) : []),
                 loading: false,
             });
         });
@@ -36,17 +36,24 @@ class Fermentation extends Component {
         const { fermentations, loading } = this.state;
         const pings = fermentations.length;
         const lastFermentation = fermentations[fermentations.length - 1];
-        const lastPing = lastFermentation ? lastFermentation.to : "-";
+        const lastPing = lastFermentation ? lastFermentation.at : "-";
         const now = new Date();
         const countLastHour = fermentations.reduce((accumulator, currentValue) => {
-            const currentDate = new Date(currentValue.from);
+            const currentDate = new Date(currentValue.at);
+            const hours = Math.abs(now - currentDate) / 36e5;
 
-            if (now.getFullYear() === currentDate.getFullYear() && 
+            console.log("now: " + now + " date: " + currentDate);
+            console.log("hours: " + hours);
+
+        /*if (now.getFullYear() === currentDate.getFullYear() && 
                 now.getMonth() === currentDate.getMonth() &&
                 now.getDay() === currentDate.getDay() &&
                 now.getHours() === currentDate.getHours()) {
-                return accumulator + currentValue.count;        
+                return accumulator++;        */
+            if (hours <= 1) {
+                return accumulator + 1;      
             }
+        
             return accumulator;
         }, 0);
 

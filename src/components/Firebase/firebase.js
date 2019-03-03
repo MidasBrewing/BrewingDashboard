@@ -31,7 +31,7 @@ class Firebase {
     // *** DB API ***
     user = uid => this.db.ref(`users/${uid}`);
     users = () => this.db.ref('users');      
-    fermentations = () => this.db.ref('fermentations');      
+    fermentations = () => this.db.ref('fermentations/A');      
 }
   
 export default Firebase;

@@ -16,9 +16,11 @@ class Fermentation extends Component {
     }
 
     loadFermentations() {
+        const { batch } = this.props;
+
         this.setState({ loading: true });
 
-        this.props.firebase.fermentations().on('value', snapshot => {
+        this.props.firebase.fermentations(batch).on('value', snapshot => {
             const fermentations = snapshot.val();
 
             this.setState({
@@ -33,6 +35,7 @@ class Fermentation extends Component {
     }
 
     render() {
+        const { batch } = this.props;
         const { fermentations, loading } = this.state;
         const pings = fermentations.length;
         const lastFermentation = fermentations[fermentations.length - 1];
@@ -59,7 +62,7 @@ class Fermentation extends Component {
 
         return (
             <div>
-                <h3>Fermentation</h3>
+                <h3>Fermentation batch {batch}</h3>
 
                 {loading && <div>Loading ...</div>}
 
@@ -74,7 +77,8 @@ class Fermentation extends Component {
     }
 
     doResetFermentationEntires() {
-        this.props.firebase.fermentations().set({}); 
+        const { batch } = this.props;
+        this.props.firebase.fermentations(batch).set({}); 
         this.setState({
             fermentations: [],
         });

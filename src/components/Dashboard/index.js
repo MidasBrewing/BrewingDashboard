@@ -7,7 +7,8 @@ const DashboardPage = () => (
     <div>
         <h1>The Dashboard</h1>
         <p>The Dashboard Page is accessible by every signed in user.</p>
-        <Fermentation />
+        <Fermentation batch="A"/>
+        <Fermentation batch="B"/>
     </div>
 );
 

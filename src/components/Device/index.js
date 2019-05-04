@@ -41,13 +41,16 @@ class Device extends Component {
             const pingAt = ping && new Date(ping.time);
             const down = deviceData.Down;
             const downAt = down && new Date(down.time);
+            const now = new Date();
 
-            const isUp = (upAt && downAt && upAt > downAt) || (upAt && !downAt);
             const lastPing = pingAt || upAt || downAt;
+            const isUp = ((upAt && downAt && upAt > downAt) || (upAt && !downAt)) 
+                && (lastPing > now.setMinutes(now.getMinutes() - 61));
+            const ip = up && up.ip;
 
             return (
                 <div>
-                    Device: { device } is { isUp ? 'UP' : 'DOWN' } last ping at { lastPing && lastPing.toISOString() }
+                    Device: { device } with IP { ip } is { isUp ? 'UP' : 'DOWN' }
                 </div>
             );
         });

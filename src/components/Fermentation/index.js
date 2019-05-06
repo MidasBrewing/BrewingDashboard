@@ -40,21 +40,25 @@ class Fermentation extends Component {
     }
 
     loadFermentations() {
-        const { batch } = this.props;
+        const { batch, firebase } = this.props;
 
         this.setState({ loading: true });
 
-        this.props.firebase.fermentations(batch).on('value', snapshot => {
-            const fermentations = Object.values(snapshot.val());
-            const lastTimeSpanInSec = this.getLastTimeSpanInSec(fermentations);
-            const lastBubbleAt = fermentations ? new Date(fermentations[0].at) : null; // fermebtations is reversed
+        firebase.fermentations(batch)
+            .orderByKey()
+            .limitToLast(20)
+            .on('value', snapshot => {
+                const data = snapshot.val() || {};
+                const fermentations = Object.values(data);
+                const lastTimeSpanInSec = this.getLastTimeSpanInSec(fermentations);
+                const lastBubbleAt = fermentations.length ? new Date(fermentations[0].at) : null; // fermentations is (already) reversed
 
-            this.setState({
-                lastTimeSpanInSec: lastTimeSpanInSec,
-                loading: false,
-                lastBubbleAt: lastBubbleAt
+                this.setState({
+                    lastTimeSpanInSec: lastTimeSpanInSec,
+                    loading: false,
+                    lastBubbleAt: lastBubbleAt
+                });
             });
-        });
     }
 
     componentDidMount() {
@@ -83,6 +87,9 @@ class Fermentation extends Component {
         axis.renderer.labels.template.radius = 40;
         axis.renderer.inversed = true;
         axis.renderer.labels.template.adapter.add("text", function(text) {
+            if (!text) {
+                return text;
+            }
             const val = text.replace(',', '');
             if (val < 60) {
                 return val + 's';
@@ -208,12 +215,10 @@ class Fermentation extends Component {
                     <Typography className={classes.title} color="textSecondary" gutterBottom>
                         Time between bubbles in batch {batch}
                     </Typography>
+                    <div id={this.id} style={{  height: "200px" }}></div>
                     <Typography component="p">
-                        {loading && <div>Loading ...</div>}
-    
-                        <div id={this.id} style={{  height: "200px" }}></div>
-
-                        <div>Last bubble at: { lastBubbleAt ? lastBubbleAt.toLocaleDateString() + ' ' + lastBubbleAt.toLocaleTimeString() : '-' }</div>
+                        {loading && 'Loading ...'}
+                        Last bubble at: { lastBubbleAt ? lastBubbleAt.toLocaleDateString() + ' ' + lastBubbleAt.toLocaleTimeString() : '-' }
                     </Typography>
                 </CardContent>
                 <CardActions>
@@ -224,8 +229,10 @@ class Fermentation extends Component {
     }
 
     doResetFermentationEntires() {
-        const { batch } = this.props;
-        this.props.firebase.fermentations(batch).set({}); 
+        const { batch, firebase } = this.props;
+        
+        firebase.fermentations(batch).set({}); 
+        
         this.setState({
             lastTimeSpanInSec: 0,
         });

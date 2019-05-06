@@ -91,7 +91,7 @@ class Device extends Component {
             const ip = up && up.ip;
 
             return (
-                <ListItem>
+                <ListItem key={device}>
                     <Avatar>
                         { isUp ? <ThumbUpIcon color="primary"/> : <ThumbDownIcon color="error"/> }
                     </Avatar>
@@ -106,12 +106,11 @@ class Device extends Component {
                     <Typography className={classes.title} color="textSecondary" gutterBottom>
                         Devices
                     </Typography>
+                    <List className={classes.root}>
+                        {devicesPart}
+                    </List>
                     <Typography component="p">
-                        {loading && <div>Loading ...</div>}
-
-                        <List className={classes.root}>
-                            {devicesPart}
-                        </List>
+                        {loading && 'Loading ...'}
                     </Typography>
                 </CardContent>
             </Card>

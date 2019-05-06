@@ -31,8 +31,7 @@ class Firebase {
     // *** DB API ***
     user = uid => this.db.ref(`users/${uid}`);
     users = () => this.db.ref('users');      
-    // myRef.orderByChild("score").limitToLast(100);
-    fermentations = (batch) => this.db.ref('fermentations/' + batch).orderByKey().limitToLast(20);      
+    fermentations = (batch) => this.db.ref('fermentations/' + batch);
     devices = () => this.db.ref('device');
 }
   

@@ -7,6 +7,7 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
+import WarningIcon from '@material-ui/icons/Warning';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -14,14 +15,18 @@ import { withFirebase } from '../Firebase';
 
 am4core.useTheme(am4themes_animated);
 
-const styles = {
+const styles = theme => ({
     card: {
         minWidth: 275,
     },
     title: {
         fontSize: 20,
     },
-};
+    icon: {
+        marginLeft: theme.spacing.unit * 2,
+        verticalAlign: 'bottom'
+    },    
+});
 
 class Fermentation extends Component {
     constructor(props) {
@@ -61,6 +66,24 @@ class Fermentation extends Component {
             });
     }
 
+    getTimeSpanText(timeInSec) {
+        if (timeInSec < 60) {
+            return timeInSec + 's';
+        }
+        const hours = Math.floor(timeInSec / 3600);
+        const mins = Math.floor(timeInSec / 60);
+        const secs = timeInSec - (hours * 3600 + mins * 60); 
+        if (hours === 0) {
+            if (secs === 0) {
+                return mins + 'm';
+            }
+            return mins + ":" + secs + "m";
+        }
+        var date = new Date(null);
+        date.setSeconds(timeInSec);
+        return date.toLocaleTimeString();
+    }
+
     componentDidMount() {
         this.loadFermentations();
         
@@ -68,7 +91,7 @@ class Fermentation extends Component {
         chart.innerRadius = am4core.percent(82);
 
         const minValue = 0;
-        const maxValue = 60 * 10; // 20 min
+        const maxValue = 60 * 10; 
         
         /**
          * Normal axis
@@ -86,20 +109,15 @@ class Fermentation extends Component {
         axis.renderer.grid.template.disabled = true;
         axis.renderer.labels.template.radius = 40;
         axis.renderer.inversed = true;
+
+        const getTimeSpanText = this.getTimeSpanText;
+
         axis.renderer.labels.template.adapter.add("text", function(text) {
             if (!text) {
                 return text;
             }
             const val = text.replace(',', '');
-            if (val < 60) {
-                return val + 's';
-            }
-            const mins = Math.floor(val / 60);
-            const secs = val - (mins * 60); 
-            if (secs === 0) {
-                return mins + 'm';
-            }
-            return mins + ":" + secs + "m";
+            return getTimeSpanText(val);
         });
 
         /**
@@ -154,18 +172,23 @@ class Fermentation extends Component {
         hand.pin.disabled = true;
 
         hand.events.on("propertychanged", function(ev) {
-            range0.endValue = ev.target.value;
-            range1.value = ev.target.value;
+            const value = ev.target.value;
+            range0.endValue = value;
+            range1.value = value;
             axis2.invalidate();
         });
 
         const { lastTimeSpanInSec } = this.state;
-        label.text = lastTimeSpanInSec + 's';
-        hand.value = lastTimeSpanInSec;
+        label.text = this.getTimeSpanText(lastTimeSpanInSec);
+        hand.value = Math.min(lastTimeSpanInSec, maxValue);
+        if (lastTimeSpanInSec > (60 * 60)) {
+            range0.axisFill.fill = am4core.color('red');
+        }
 
         this.hand = hand;
         this.label = label;
         this.chart = chart;
+        this.range0 = range0;
     }
 
     componentWillUnmount() {
@@ -177,10 +200,15 @@ class Fermentation extends Component {
     componentDidUpdate(oldProps) {
         const { lastTimeSpanInSec } = this.state;
 
-        this.label.text = lastTimeSpanInSec + 's';
+        this.label.text = this.getTimeSpanText(lastTimeSpanInSec);
+
+        if (lastTimeSpanInSec > (60 * 60)) {
+            this.range0.axisFill.fill = am4core.color('red');
+        }
+
         var animation = new am4core.Animation(this.hand, {
             property: "value",
-            to: lastTimeSpanInSec
+            to: Math.min(lastTimeSpanInSec, (10 * 60))
         }, 1000, am4core.ease.cubicOut).start();
     }
 
@@ -208,6 +236,9 @@ class Fermentation extends Component {
     render() {
         const { classes, batch } = this.props;
         const { lastBubbleAt, loading } = this.state;
+        const now = new Date();
+        const lastBubbleIntervalInMs = lastBubbleAt ? (now - lastBubbleAt) : 0;
+        const longTimeAgo = lastBubbleIntervalInMs > (60 * 60 * 1000);
 
         return (
             <Card className={classes.card}>
@@ -219,6 +250,7 @@ class Fermentation extends Component {
                     <Typography component="p">
                         {loading && 'Loading ...'}
                         Last bubble at: { lastBubbleAt ? lastBubbleAt.toLocaleDateString() + ' ' + lastBubbleAt.toLocaleTimeString() : '-' }
+                        {longTimeAgo && <WarningIcon className={classes.icon} color="error"></WarningIcon>}
                     </Typography>
                 </CardContent>
                 <CardActions>

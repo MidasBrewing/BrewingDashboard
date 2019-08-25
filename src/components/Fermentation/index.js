@@ -35,10 +35,12 @@ class Fermentation extends Component {
     this.state = {
       loading: false,
       lastTimeSpanInSec: 0,
-      lastBubbleAt: null
+      lastBubbleAt: null,
+      bubbles: []
     };
 
     this.id = _.uniqueId("chart-");
+    this.id2 = _.uniqueId("chart2-");
 
     this.doResetBubbleEntires = this.doResetBubbleEntires.bind(this);
     this.loadBubbles = this.loadBubbles.bind(this);
@@ -59,10 +61,13 @@ class Fermentation extends Component {
         const lastTimeSpanInSec = this.getLastTimeSpanInSec(bubbles);
         const lastBubbleAt = bubbles.length ? new Date(bubbles[0].at) : null; // bubbles is (already) reversed
 
+        console.log("bubbles:" + JSON.stringify(bubbles));
+
         this.setState({
           lastTimeSpanInSec: lastTimeSpanInSec,
           loading: false,
-          lastBubbleAt: lastBubbleAt
+          lastBubbleAt: lastBubbleAt,
+          bubbles: bubbles
         });
       });
   }
@@ -85,9 +90,75 @@ class Fermentation extends Component {
     return date.toLocaleTimeString();
   }
 
-  componentDidMount() {
-    this.loadBubbles();
+  setupHistogram() {
+    // Create chart instance
+    var chart = am4core.create(this.id2, am4charts.XYChart);
 
+    // Add data
+    chart.data = [];
+
+    // Set input format for the dates
+    chart.dateFormatter.inputDateFormat = "i";
+
+    // Create axes
+    var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+    dateAxis.baseInterval = {
+      timeUnit: "hour",
+      count: 1
+    };
+
+    var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+
+    // Create series
+    var series = chart.series.push(new am4charts.LineSeries());
+    series.dataFields.valueY = "value";
+    series.dataFields.dateX = "date";
+    series.tooltipText = "{value}";
+    series.strokeWidth = 2;
+    series.minBulletDistance = 15;
+
+    // Drop-shaped tooltips
+    series.tooltip.background.cornerRadius = 20;
+    series.tooltip.background.strokeOpacity = 0;
+    series.tooltip.pointerOrientation = "vertical";
+    series.tooltip.label.minWidth = 40;
+    series.tooltip.label.minHeight = 40;
+    series.tooltip.label.textAlign = "middle";
+    series.tooltip.label.textValign = "middle";
+
+    // Make bullets grow on hover
+    var bullet = series.bullets.push(new am4charts.CircleBullet());
+    bullet.circle.strokeWidth = 2;
+    bullet.circle.radius = 4;
+    bullet.circle.fill = am4core.color("#fff");
+
+    var bullethover = bullet.states.create("hover");
+    bullethover.properties.scale = 1.3;
+
+    // Make a panning cursor
+    chart.cursor = new am4charts.XYCursor();
+    chart.cursor.behavior = "panXY";
+    chart.cursor.xAxis = dateAxis;
+    chart.cursor.snapToSeries = series;
+
+    // Create vertical scrollbar and place it before the value axis
+    chart.scrollbarY = new am4core.Scrollbar();
+    chart.scrollbarY.parent = chart.leftAxesContainer;
+    chart.scrollbarY.toBack();
+
+    // Create a horizontal scrollbar with previe and place it underneath the date axis
+    chart.scrollbarX = new am4charts.XYChartScrollbar();
+    chart.scrollbarX.series.push(series);
+    chart.scrollbarX.parent = chart.bottomAxesContainer;
+
+    chart.events.on("ready", function() {
+      dateAxis.zoom({ start: 0.79, end: 1 });
+    });
+
+    this.chart2 = chart;
+  }
+
+  setupGauge() {
     let chart = am4core.create("" + this.id, am4charts.GaugeChart);
     chart.innerRadius = am4core.percent(82);
 
@@ -192,14 +263,23 @@ class Fermentation extends Component {
     this.range0 = range0;
   }
 
+  componentDidMount() {
+    this.loadBubbles();
+    this.setupGauge();
+    this.setupHistogram();
+  }
+
   componentWillUnmount() {
     if (this.chart) {
       this.chart.dispose();
     }
+    if (this.chart2) {
+      this.chart2.dispose();
+    }
   }
 
-  componentDidUpdate(oldProps) {
-    const { lastTimeSpanInSec } = this.state;
+  componentDidUpdate() {
+    const { lastTimeSpanInSec, bubbles } = this.state;
 
     this.label.text = this.getTimeSpanText(lastTimeSpanInSec);
 
@@ -216,10 +296,15 @@ class Fermentation extends Component {
       1000,
       am4core.ease.cubicOut
     ).start();
+
+    this.chart2.data = bubbles.map(bubble => ({
+      date: bubble.at,
+      value: bubble.count
+    }));
   }
 
   getLastTimeSpanInSec(bubbles) {
-    if (!bubbles || bubbles.length === 1) {
+    if (!bubbles || bubbles.length < 2) {
       return 0;
     }
     const reversed = bubbles.reverse();
@@ -250,6 +335,7 @@ class Fermentation extends Component {
             Time between bubbles in batch {batch}
           </Typography>
           <div id={this.id} style={{ height: "200px" }} />
+          <div id={this.id2} style={{ height: "500px" }} />
           <Typography component="p">
             {loading && "Loading ..."}
             Last bubble at:{" "}

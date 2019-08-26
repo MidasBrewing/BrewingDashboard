@@ -59,9 +59,9 @@ class Fermentation extends Component {
         const data = snapshot.val() || {};
         const bubbles = Object.values(data);
         const lastTimeSpanInSec = this.getLastTimeSpanInSec(bubbles);
-        const lastBubbleAt = bubbles.length ? new Date(bubbles[0].at) : null; // bubbles is (already) reversed
-
-        console.log("bubbles:" + JSON.stringify(bubbles));
+        const lastBubbleAt = bubbles.length
+          ? new Date(bubbles[bubbles.length - 1].at)
+          : null;
 
         this.setState({
           lastTimeSpanInSec: lastTimeSpanInSec,
@@ -92,7 +92,7 @@ class Fermentation extends Component {
 
   setupHistogram() {
     // Create chart instance
-    var chart = am4core.create(this.id2, am4charts.XYChart);
+    const chart = am4core.create(this.id2, am4charts.XYChart);
 
     // Add data
     chart.data = [];
@@ -101,13 +101,9 @@ class Fermentation extends Component {
     chart.dateFormatter.inputDateFormat = "i";
 
     // Create axes
-    var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
-    dateAxis.baseInterval = {
-      timeUnit: "hour",
-      count: 1
-    };
+    const dateAxis = chart.xAxes.push(new am4charts.DateAxis());
 
-    var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+    const valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
 
     // Create series
     var series = chart.series.push(new am4charts.LineSeries());
@@ -127,12 +123,12 @@ class Fermentation extends Component {
     series.tooltip.label.textValign = "middle";
 
     // Make bullets grow on hover
-    var bullet = series.bullets.push(new am4charts.CircleBullet());
+    const bullet = series.bullets.push(new am4charts.CircleBullet());
     bullet.circle.strokeWidth = 2;
     bullet.circle.radius = 4;
     bullet.circle.fill = am4core.color("#fff");
 
-    var bullethover = bullet.states.create("hover");
+    const bullethover = bullet.states.create("hover");
     bullethover.properties.scale = 1.3;
 
     // Make a panning cursor
@@ -140,20 +136,6 @@ class Fermentation extends Component {
     chart.cursor.behavior = "panXY";
     chart.cursor.xAxis = dateAxis;
     chart.cursor.snapToSeries = series;
-
-    // Create vertical scrollbar and place it before the value axis
-    chart.scrollbarY = new am4core.Scrollbar();
-    chart.scrollbarY.parent = chart.leftAxesContainer;
-    chart.scrollbarY.toBack();
-
-    // Create a horizontal scrollbar with previe and place it underneath the date axis
-    chart.scrollbarX = new am4charts.XYChartScrollbar();
-    chart.scrollbarX.series.push(series);
-    chart.scrollbarX.parent = chart.bottomAxesContainer;
-
-    chart.events.on("ready", function() {
-      dateAxis.zoom({ start: 0.79, end: 1 });
-    });
 
     this.chart2 = chart;
   }
@@ -265,7 +247,7 @@ class Fermentation extends Component {
 
   componentDidMount() {
     this.loadBubbles();
-    this.setupGauge();
+    //    this.setupGauge();
     this.setupHistogram();
   }
 
@@ -281,7 +263,7 @@ class Fermentation extends Component {
   componentDidUpdate() {
     const { lastTimeSpanInSec, bubbles } = this.state;
 
-    this.label.text = this.getTimeSpanText(lastTimeSpanInSec);
+    /*this.label.text = this.getTimeSpanText(lastTimeSpanInSec);
 
     if (lastTimeSpanInSec > 60 * 60) {
       this.range0.axisFill.fill = am4core.color("red");
@@ -296,6 +278,7 @@ class Fermentation extends Component {
       1000,
       am4core.ease.cubicOut
     ).start();
+    */
 
     this.chart2.data = bubbles.map(bubble => ({
       date: bubble.at,
@@ -307,7 +290,7 @@ class Fermentation extends Component {
     if (!bubbles || bubbles.length < 2) {
       return 0;
     }
-    const reversed = bubbles.reverse();
+    const reversed = bubbles.slice().reverse();
     const lastBubbleEntry = reversed[0];
     const lastBubbleAt = new Date(lastBubbleEntry.at);
     const secondLastBubbleEntry = reversed[1];
@@ -332,10 +315,8 @@ class Fermentation extends Component {
             color="textSecondary"
             gutterBottom
           >
-            Time between bubbles in batch {batch}
+            Bubbles in batch {batch}
           </Typography>
-          <div id={this.id} style={{ height: "200px" }} />
-          <div id={this.id2} style={{ height: "500px" }} />
           <Typography component="p">
             {loading && "Loading ..."}
             Last bubble at:{" "}
@@ -348,6 +329,7 @@ class Fermentation extends Component {
               <WarningIcon className={classes.icon} color="error" />
             )}
           </Typography>
+          <div id={this.id2} style={{ height: "500px" }} />
         </CardContent>
         <CardActions>
           <Button size="small" onClick={this.doResetBubbleEntires}>

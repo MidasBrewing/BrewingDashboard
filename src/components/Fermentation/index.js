@@ -46,6 +46,14 @@ class Fermentation extends Component {
     this.loadBubbles = this.loadBubbles.bind(this);
   }
 
+  getLastBubbleAt(bubbles) {
+    if (bubbles && bubbles.length) {
+      const last = [...bubbles].reverse().find(bubble => bubble.count > 0);
+      return last ? new Date(last.at) : null;
+    }
+    return null;
+  }
+
   loadBubbles() {
     const { batch, firebase } = this.props;
 
@@ -59,9 +67,7 @@ class Fermentation extends Component {
         const data = snapshot.val() || {};
         const bubbles = Object.values(data);
         const lastTimeSpanInSec = this.getLastTimeSpanInSec(bubbles);
-        const lastBubbleAt = bubbles.length
-          ? new Date(bubbles[bubbles.length - 1].at)
-          : null;
+        const lastBubbleAt = this.getLastBubbleAt(bubbles);
 
         this.setState({
           lastTimeSpanInSec: lastTimeSpanInSec,
